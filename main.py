@@ -1,45 +1,36 @@
 import os
 
 
-class WatchD(path=None):
-    def __init__(self):
-        self.path = str()
+class WatchD:
+    def __init__(self, path):
+        self.path = path
+        self.og_file_stamp = 0
+        self.og_dir_stamp = 0
 
-    def get_path(self, path=None):
+    def get_tree(self):
         while True:
-            if path is None:
-                print(f"Path cannot be empty!")
-            else:
-                print(path)
-                return path
+            for root, dirs, files in os.walk(self.path, topdown=True):
+                for name in files:
+                    file_key = os.path.join(root, name)
+                    file_stamp = os.stat(file_key).st_mtime
+                    # print(file_key + "::", file_stamp)
+                    if file_stamp != self.og_file_stamp:
+                        print("{0} was modified at {1}".format(file_key, file_stamp))
+                        self.og_file_stamp = file_stamp
+                    else:
+                        return
+                for name in dirs:
+                    dir_key = os.path.join(root, name)
+                    dir_stamp = os.stat(dir_key).st_mtime
+                    if dir_stamp != self.og_dir_stamp:
+                        print("{0} was modified at {1}".format(dir_key, dir_stamp))
+                        self.og_dir_stamp = dir_stamp
+                        return
+                    else:
+                        return
 
-    def get_tree(self, path):
-        epochs = {}
-        epochs_ = {}
-        for root, dirs, files in os.walk(path, topdown=True):
-            for name in files:
-                # print(os.path.join(root, name))
-                key = os.path.join(root, name)
-                try:
-                    for item in name:
-                        epochs[key] = os.path.getmtime(root)
-                    print(epochs)
-                except TypeError as e:
-                    print(e)
-            for name in dirs:
-                print(os.path.join(root, name))
-                # # DN = os.path.join(root, name)#Dir Name
-                # TOM = os.path.getmtime(root) # Time Of Modification
-                # try:
-                #     for items in dirs:
-                #         epochs_[os.path.join(root, name)] = epochs_[str(TOM)]
-                # except TypeError as err:
-                #     print(err)
-                # print(os.path.getmtime(root))
-
-    # def get_create(self):
-    #     print(os.path.getmtime())
+    # def handler(self, og_dir_stamp, og_file_stamp):
 
 
-run = WatchD()
-run.get_tree(r"C:\Users\Ream\Desktop\NEW")
+run = WatchD(r"C:\Users\user\Desktop\stam")
+run.get_tree()

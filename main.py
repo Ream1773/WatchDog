@@ -29,8 +29,13 @@ class WatchD:
                     else:
                         return
 
-    # def handler(self, og_dir_stamp, og_file_stamp):
+
+def run():
+    prompt = input("Please enter the path you would like to monitor:")
+    init = WatchD(repr(prompt))
+    init.get_tree()
+    return prompt
 
 
-run = WatchD(r"C:\Users\user\Desktop\stam")
-run.get_tree()
+if __name__ == "__main__":
+    run()

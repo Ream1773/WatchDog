@@ -19,8 +19,3 @@ def get_logger():
     logger.addHandler(file_handler)
     logger.addHandler(stream_handler)
     return logger
-
-# def test1():
-    # test = WatchD()
-    # print(test.get_tree(r"C:\Users\Ream Sadan\Desktop\test"))
-    # get_logs(test.get_tree(r"C:\Users\Ream Sadan\Desktop\test"))

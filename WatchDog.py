@@ -1,9 +1,9 @@
 import os
-# TODO:: Delete files from dictionary that are not in the specified path to prevent crashes.
 # TODO:: Implement the hasher function to make the program more genuine.
+# TODO:: Fix exception that occasionally occurs when files/dirs are deleted.
 
 
-class WatchD:
+class WatchDog:
     """
     Main class that scans files recursively of provided path
     and logs changes made to them.
@@ -11,53 +11,67 @@ class WatchD:
     def __init__(self, path: str, logg):
         self.path = path
         self.logg = logg
-        self.files = {}
-        self.dirs = {}
         self.is_first_run = True
-        self.file_set = set()
+        self.entities = {}
 
     def get_tree(self):
-        self.is_first_run = True
+        if self.is_first_run:
+            self.entities.clear()
         while True:
-            self.get_timestamps(self.path)
+            self._get_entities(self.path)
             self.is_first_run = False
 
-    def get_timestamps(self, path: str):
-        for root, dirs, files in os.walk(path, topdown=True):
-            self.check_entities(root, files, False)
-            self.check_entities(root, dirs, True)
+    def _get_entities(self, path: str):
+        """
+        Calls the _get_timestamps class method that which then scans all the
+        elements of the given path param.
+        :param path:
+        :return: None
+        """
+        for root, dirs, files in os.walk(path):
+            self._check_existence(root, files, False)
+            self._check_existence(root, dirs, True)
 
-    def check_entities(self, root, walk_files, is_dir):
+    def _check_existence(self, root, walk_files, is_dir):
+        """
+        * Checks if entity is a file or directory.
+        * Checks if the file/dir exists and sets modification time if file/dir exists.
+        :param -> root:
+        :param -> walk_files:
+        :param -> is_dir:
+        :return: -> None
+        """
         if is_dir:
-            db_files = self.dirs
-            file_type = "directory"
+            file_type = "Directory"
         else:
-            file_type = "file"
-            db_files = self.files
+            file_type = "File"
 
         for name in walk_files:
             keys = os.path.join(root, name)
-            stamps = os.stat(keys).st_mtime
-            self.check_changed(keys, stamps, db_files, file_type)
+            try:
+                if not os.path.exists(keys):
+                    self.entities.pop(name, None)
+                    self.logg.info(f"[-]: {file_type} [-] {keys} deleted!")
+                else:
+                    mod_time = os.stat(keys).st_mtime
+                    creation_time = os.stat(keys).st_ctime
+                    self.check_changed(keys, mod_time, creation_time, file_type)
+            except FileNotFoundError as e:
+                print(f"{e}")
+                pass
 
-    def check_changed(self, keys, stamps, db_files, file_type):
+    def check_changed(self, keys, mod_time, creation_time, file_type):
         log_text = str()
 
-        if keys in db_files:
-            if db_files[keys] != stamps:
-                log_text = f"{db_files[keys]} Changed"
-                db_files[keys] = stamps
+        if keys in self.entities:
+            if self.entities[keys] != mod_time:
+                log_text = f"[+] {file_type} [+]: {keys} modified at {self.entities[keys]}!"
+                self.entities[keys] = mod_time
         else:
-            db_files[keys] = stamps
-            log_text = f"New {file_type} {keys} added!"
-            # self.file_set.add(keys)
-            print(db_files)
+            self.entities[keys] = mod_time
+            log_text = f"[+]NEW {file_type} [+]: {keys} added at {creation_time}!"
+            if not os.path.exists(keys):
+                self.entities.pop(keys, None)
 
         if not self.is_first_run and log_text:
             self.logg.info(log_text)
-
-    # def deleted_files(self, keys, file_type, db_files):
-    #     if self.file_set not in db_files.keys():
-    #         log_text = f"{file_type} {keys} deleted from {self.path}"
-    #         self.logg.info(log_text)
-    #         self.file_set.clear()

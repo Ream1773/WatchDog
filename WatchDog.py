@@ -2,7 +2,6 @@ import logging
 import os
 
 # TODO:: Implement the hasher function to make the program more genuine.
-# TODO:: Fix exception that occasionally occurs when files/dirs are deleted.
 
 
 class WatchDog:

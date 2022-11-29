@@ -2,6 +2,7 @@ import logging
 import os
 
 # TODO:: Implement the hasher function to make the program more genuine.
+# TODO:: Add feature that shows if the directory is empty.
 
 
 class WatchDog:
@@ -24,44 +25,42 @@ class WatchDog:
 
     def _get_entities(self):
         """
-        Calls the _get_timestamps class method that which then scans all the
-        elements of the given path param.
+        Calls the _get_timestamps class method which then scans all the
+        elements of the given path parameter.
         :return: -> None
         """
+        walk_files = dict()
         for root, dirs, files in os.walk(self.path):
-            self._check_existence(root, files, False)
-            self._check_existence(root, dirs, True)
+            walk_files.update({os.path.join(root, name): 'Directory' for name in dirs})
+            walk_files.update({os.path.join(root, name): 'File' for name in files})
 
-    def _check_existence(self, root, walk_files, is_dir):
+        self._check_existence(walk_files)
+
+    def _check_existence(self, walk_files):
         """
         * Checks if entity is a file or directory.
         * Checks if the file/dir exists and creates modification time if file/dir exists.
-        :param -> root: Path provided by main.py essentially
-        :param -> walk_files: iteration of all files in provided path.
-        :param -> is_dir: function to check file type(dir/file)
-        :return: -> None
         """
-        if is_dir:
-            file_type = "Directory"
-        else:
-            file_type = "File"
 
-        for name in walk_files:
-            keys = os.path.join(root, name)
+        for file in list(self.entities.keys()):
+            if file not in walk_files.keys():
+                self.logg.info(f"[-] {file} deleted!")
+                self.entities.pop(file, None)
+
+        for keys, file_type in walk_files.items():
             try:
                 stat = os.stat(keys)
-            except FileNotFoundError as e:
+            except FileNotFoundError:
                 self.entities.pop(keys, None)
                 self.logg.info(f"[-]: {file_type} [-] {keys} deleted!")
                 continue
 
             mod_time = stat.st_mtime
             creation_time = stat.st_ctime
-            self.check_changed(keys, mod_time, creation_time, file_type)
+            self._check_changed(keys, mod_time, creation_time, file_type)
 
-    def check_changed(self, keys, mod_time, creation_time, file_type):
+    def _check_changed(self, keys, mod_time, creation_time, file_type):
         """
-
         :param -> keys: File/Directory name
         :param -> mod_time: Modification time
         :param -> creation_time: Creation time
@@ -76,7 +75,11 @@ class WatchDog:
                 self.entities[keys] = mod_time
         else:
             self.entities[keys] = mod_time
-            log_text = f"[+]NEW {file_type} [+]: {keys} added at {creation_time}!"
+            log_text = f"[+] NEW {file_type} [+]: {keys} added at {creation_time}!"
 
         if not self.is_first_run and log_text:
             self.logg.info(log_text)
+
+# class Info:
+#     def __init__(self):
+#         self.file_info = str()

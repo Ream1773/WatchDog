@@ -6,9 +6,11 @@ import logging
 import time
 
 
+# **_Constants_** #
 TEST_PATH = r"C:\Users\Ream Sadan\Desktop\test"
 TEST_FILE = os.path.join(TEST_PATH, "File.txt")
 TEST_DIR = os.path.join(TEST_PATH, "test1")
+# **_Constants_** #
 
 
 class MockLog(logging.Logger):
@@ -56,17 +58,13 @@ class WatchDogTest(unittest.TestCase):
         self.watch_dog._get_entities()
         self.assertIn(f"{TEST_FILE} modified", self.mock_log.last_log)
 
-    # def testDeletedFile(self):
-    #     with open(TEST_FILE, "w") as f:
-    #         f.write("NULL")
-    #     self.watch_dog._get_entities()
-    #     print(self.mock_log.last_log)
-    #     if os.path.exists(TEST_FILE):
-    #         os.remove(TEST_FILE)
-    #     os.unlink(TEST_FILE)
-    #     print(self.mock_log.last_log)
-    #     self.watch_dog._get_entities()
-    #     self.assertIn(f"{TEST_FILE} deleted", self.mock_log.last_log)
+    def testDeletedFile(self):
+        with open(TEST_FILE, "w") as f:
+            f.write("test")
+        self.watch_dog._get_entities()
+        os.remove(TEST_FILE)
+        self.watch_dog._get_entities()
+        self.assertIn(f"{TEST_FILE} deleted", self.mock_log.last_log)
 
 
 if __name__ == '__main__':

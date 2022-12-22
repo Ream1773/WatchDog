@@ -1,7 +1,6 @@
 import os
 import Logger
 from WatchDog import WatchDog
-# TODO:: Implement sys arg parser
 
 
 def main():
